@@ -7,6 +7,7 @@ const DEFAULT_FORM = {
   academicYear: '',
   contactEmail: '',
   contactPhone: '',
+  address: '',
   timezone: '',
   resultPublishMode: '',
 }
@@ -30,6 +31,7 @@ const AdminSettings = () => {
         academicYear: res?.academicYear || '',
         contactEmail: res?.contactEmail || '',
         contactPhone: res?.contactPhone || '',
+        address: res?.address || '',
         timezone: res?.timezone || '',
         resultPublishMode: res?.resultPublishMode || '',
       })
@@ -55,6 +57,7 @@ const AdminSettings = () => {
         academicYear: form.academicYear,
         contactEmail: form.contactEmail,
         contactPhone: form.contactPhone,
+        address: form.address,
         timezone: form.timezone,
         resultPublishMode: form.resultPublishMode,
       }
@@ -131,6 +134,15 @@ const AdminSettings = () => {
               type="text"
               value={form.contactPhone}
               onChange={(e) => setForm((f) => ({ ...f, contactPhone: e.target.value }))}
+              className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+            />
+          </div>
+          <div className="md:col-span-2">
+            <label className="text-xs uppercase tracking-[0.2em] text-slate-500">Address</label>
+            <textarea
+              rows="3"
+              value={form.address}
+              onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
               className="mt-2 w-full rounded-xl border border-gray-300 px-4 py-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
             />
           </div>

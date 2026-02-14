@@ -27,6 +27,7 @@ const AdminDashboard = () => {
     academicYear: '',
     contactEmail: '',
     contactPhone: '',
+    address: '',
   })
 
   const columns = [
@@ -77,6 +78,7 @@ const AdminDashboard = () => {
           academicYear: settingsPayload?.academicYear || '',
           contactEmail: settingsPayload?.contactEmail || '',
           contactPhone: settingsPayload?.contactPhone || '',
+          address: settingsPayload?.address || '',
         })
         setRows(
           eventItems.map((event) => {
@@ -187,6 +189,10 @@ const AdminDashboard = () => {
               <div className="flex items-center justify-between gap-4">
                 <span className="text-slate-500">Contact Phone</span>
                 <span className="font-semibold text-slate-900">{settings.contactPhone || '-'}</span>
+              </div>
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-slate-500">Address</span>
+                <span className="font-semibold text-slate-900">{settings.address || '-'}</span>
               </div>
             </div>
           </div>

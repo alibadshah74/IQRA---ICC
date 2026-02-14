@@ -3,19 +3,19 @@ import React from 'react'
 const testimonials = [
   {
     quote:
-      'IQRA helped my daughter regain confidence in math. The structured plan and weekly feedback made the difference.',
+      'IQRA helped my daughter regain confidence in math.',
     name: 'Razia Akter',
     role: 'Parent of Grade 9 student',
   },
   {
     quote:
-      'The teachers explain concepts with clarity and patience. I now feel prepared for board exams without panic.',
+      'The teachers explain concepts with clarity and patience.',
     name: 'Shuvo Ahmed',
     role: 'Grade 10 student',
   },
   {
     quote:
-      'The mentors track progress consistently and share updates. We feel involved and reassured throughout the term.',
+      'The mentors track progress consistently and share updates.',
     name: 'Mahmuda Begum',
     role: 'Parent of Grade 7 student',
   },
@@ -28,15 +28,15 @@ const Testimonial = () => {
         <div>
           <p className="text-xs uppercase tracking-[0.4em] text-slate-500">Testimonials</p>
           <h2 className="mt-4 text-3xl font-semibold text-slate-900 md:text-4xl">
-            Families trust IQRA for steady progress and care.
+            Families trust IQRA.
           </h2>
         </div>
         <p className="max-w-xl text-sm text-slate-500">
-          Real experiences from students and parents who grew with IQRA.
+          Real experiences from students and parents.
         </p>
       </div>
 
-      <div className="mt-10 grid gap-6 lg:grid-cols-3">
+      <div className="mt-10 grid grid-cols-2 gap-6">
         {testimonials.map((item) => (
           <div key={item.name} className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
             <p className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-400">Testimonial</p>

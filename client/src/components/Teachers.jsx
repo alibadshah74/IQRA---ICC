@@ -4,50 +4,50 @@ import teacherImage from '../assets/iqrabg.avif'
 const teachers = [
   {
     name: 'Ayesha Rahman',
-    qualification: 'MSc Mathematics',
-    description: 'Specializes in problem-solving strategies and board exam readiness.',
+    qualification: 'Mathematics',
+    description: 'Specializes in problem-solving.',
     image: teacherImage,
   },
   {
     name: 'Nusrat Jahan',
     qualification: 'MA English',
-    description: 'Focuses on reading fluency, writing structure, and confidence building.',
+    description: 'Focuses on reading fluency, writing structure.',
     image: teacherImage,
   },
   {
     name: 'Tariq Mahmud',
     qualification: 'MSc Physics',
-    description: 'Known for concept clarity sessions and hands-on scientific thinking.',
+    description: 'Known for concept clarity sessions.',
     image: teacherImage,
   },
   {
     name: 'Sadia Hasan',
     qualification: 'MBA Accounting',
-    description: 'Guides commerce students through fundamentals and exam techniques.',
+    description: 'Guides commerce students through fundamentals.',
     image: teacherImage,
   },
   {
     name: 'Imran Hossain',
     qualification: 'MSc Chemistry',
-    description: 'Builds strong foundations with structured theory and practice reviews.',
+    description: 'Builds strong foundations with structured theory.',
     image: teacherImage,
   },
   {
     name: 'Nabila Khan',
     qualification: 'BEd, Social Science',
-    description: 'Supports learners with interactive lessons and consistent assessments.',
+    description: 'Supports learners with interactive lessons.',
     image: teacherImage,
   },
   {
     name: 'Farhan Ahmed',
     qualification: 'MSc Biology',
-    description: 'Helps students master core concepts with clean, exam-ready notes.',
+    description: 'Helps students master core concepts.',
     image: teacherImage,
   },
   {
     name: 'Sabina Chowdhury',
     qualification: 'MA History',
-    description: 'Brings context and storytelling to help students retain key topics.',
+    description: 'Brings context and storytelling to help.',
     image: teacherImage,
   },
 ]
@@ -69,13 +69,13 @@ const Teachers = () => {
   const visibleTeachers = showAll ? teachers : teachers.slice(0, 6)
 
   const grid = (
-    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3">
       {visibleTeachers.map((teacher) => (
         <div key={teacher.name} className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-          <div className="h-44 w-full overflow-hidden">
+          <div className="h-36 w-full overflow-hidden sm:h-44">
             <img src={teacher.image} alt={teacher.name} className="h-full w-full object-cover" loading="lazy" />
           </div>
-          <div className="p-5">
+          <div className="p-4 sm:p-5">
             <h3 className="text-lg font-semibold text-slate-900">{teacher.name}</h3>
             <p className="mt-1 text-xs uppercase tracking-[0.2em] text-slate-400">{teacher.qualification}</p>
             <p className="mt-3 text-sm text-slate-600">{teacher.description}</p>
@@ -91,12 +91,11 @@ const Teachers = () => {
         <div>
           <p className="text-xs uppercase tracking-[0.4em] text-slate-500">Teachers</p>
           <h2 className="mt-4 text-3xl font-semibold text-slate-900 md:text-4xl">
-            Experienced mentors who guide every learner with care.
+            Experienced mentors
           </h2>
         </div>
         <p className="max-w-xl text-sm text-slate-500">
-          Each faculty member is selected for subject mastery, classroom clarity, and student-first
-          coaching.
+          Each faculty member is selected for subject mastery.
         </p>
       </div>
 
@@ -136,13 +135,13 @@ const Teachers = () => {
                 Close
               </button>
             </div>
-            <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-6 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3">
               {teachers.map((teacher) => (
                 <div key={`${teacher.name}-full`} className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-                  <div className="h-44 w-full overflow-hidden">
+                  <div className="h-36 w-full overflow-hidden sm:h-44">
                     <img src={teacher.image} alt={teacher.name} className="h-full w-full object-cover" loading="lazy" />
                   </div>
-                  <div className="p-5">
+                  <div className="p-4 sm:p-5">
                     <h4 className="text-lg font-semibold text-slate-900">{teacher.name}</h4>
                     <p className="mt-1 text-xs uppercase tracking-[0.2em] text-slate-400">{teacher.qualification}</p>
                     <p className="mt-3 text-sm text-slate-600">{teacher.description}</p>

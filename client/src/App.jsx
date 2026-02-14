@@ -2,6 +2,7 @@ import React from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 
 import Home from './pages/home/Home.jsx'
+import Gallery from './pages/gallery/Gallery.jsx'
 import Login from './pages/auth/Login.jsx'
 import SelectRole from './pages/auth/SelectRole.jsx'
 import NotFound from './pages/shared/NotFound.jsx'
@@ -49,6 +50,7 @@ const App = () => {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/gallery" element={<Gallery />} />
         <Route path="/select-role" element={<SelectRole />} />
         <Route path="/login" element={<Login />} />
 

@@ -21,6 +21,24 @@ const AdminEvents = () => {
     colorTheme: DEFAULT_COLOR,
     isActive: true,
   })
+  const [galleryOpen, setGalleryOpen] = useState(false)
+  const [galleryFile, setGalleryFile] = useState(null)
+  const [galleryError, setGalleryError] = useState(null)
+  const [gallerySaving, setGallerySaving] = useState(false)
+  const [noticeRows, setNoticeRows] = useState([])
+  const [noticeLoading, setNoticeLoading] = useState(true)
+  const [noticeError, setNoticeError] = useState(null)
+  const [noticeOpen, setNoticeOpen] = useState(false)
+  const [noticeSaving, setNoticeSaving] = useState(false)
+  const [noticeFormError, setNoticeFormError] = useState(null)
+  const [noticeForm, setNoticeForm] = useState({
+    id: '',
+    title: '',
+    description: '',
+    isActive: true,
+    file: null,
+    currentFileName: '',
+  })
 
   const columns = [
     { key: 'title', label: 'Event' },
@@ -63,6 +81,48 @@ const AdminEvents = () => {
     },
   ]
 
+  const noticeColumns = [
+    { key: 'title', label: 'Notice' },
+    {
+      key: 'file',
+      label: 'Document',
+      render: (row) => (
+        <a
+          href={row.fileUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="text-xs font-semibold text-blue-700 hover:underline"
+        >
+          {row.fileName || 'Download'}
+        </a>
+      ),
+    },
+    { key: 'createdAtLabel', label: 'Created' },
+    { key: 'status', label: 'Status' },
+    {
+      key: 'actions',
+      label: 'Actions',
+      render: (row) => (
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => handleNoticeEdit(row)}
+            className="rounded-lg border border-gray-200 px-3 py-1 text-xs font-semibold text-slate-700 hover:bg-gray-50"
+          >
+            Edit
+          </button>
+          <button
+            type="button"
+            onClick={() => handleNoticeDelete(row._id)}
+            className="rounded-lg border border-red-200 px-3 py-1 text-xs font-semibold text-red-600 hover:bg-red-50"
+          >
+            Delete
+          </button>
+        </div>
+      ),
+    },
+  ]
+
   const fetchEvents = async () => {
     const { data } = await apiClient.get('/admin/events?limit=200')
     const res = data?.data ?? data
@@ -95,15 +155,36 @@ const AdminEvents = () => {
     )
   }
 
+  const fetchNotices = async () => {
+    const { data } = await apiClient.get('/admin/notices?limit=200')
+    const res = data?.data ?? data
+    const items = Array.isArray(res?.items) ? res.items : []
+    setNoticeRows(
+      items.map((notice) => ({
+        ...notice,
+        _id: notice._id,
+        title: notice.title || '-',
+        fileUrl: notice.fileUrl,
+        fileName: notice.fileName,
+        createdAtLabel: notice.createdAt ? new Date(notice.createdAt).toLocaleDateString() : '-',
+        status: notice.isActive === false ? 'Disabled' : 'Active',
+      })),
+    )
+  }
+
   const fetchAll = async () => {
     try {
       setLoading(true)
       setError(null)
-      await fetchEvents()
+      setNoticeLoading(true)
+      setNoticeError(null)
+      await Promise.all([fetchEvents(), fetchNotices()])
     } catch (err) {
       setError(err.response?.data?.message || err.message || 'Failed to load events')
+      setNoticeError(err.response?.data?.message || err.message || 'Failed to load notices')
     } finally {
       setLoading(false)
+      setNoticeLoading(false)
     }
   }
 
@@ -134,6 +215,129 @@ const AdminEvents = () => {
       fetchEvents()
     } catch (err) {
       setError(err.response?.data?.message || err.message || 'Failed to disable event')
+    }
+  }
+
+  const handleNoticeEdit = (row) => {
+    setNoticeForm({
+      id: row._id,
+      title: row.title || '',
+      description: row.description || '',
+      isActive: row.isActive !== false,
+      file: null,
+      currentFileName: row.fileName || '',
+    })
+    setNoticeFormError(null)
+    setNoticeOpen(true)
+  }
+
+  const handleNoticeDelete = async (id) => {
+    if (!id) return
+    const confirmed = window.confirm('Delete this notice? This cannot be undone.')
+    if (!confirmed) return
+    try {
+      await apiClient.delete(`/admin/notices/${id}`)
+      fetchNotices()
+    } catch (err) {
+      setNoticeError(err.response?.data?.message || err.message || 'Failed to delete notice')
+    }
+  }
+
+  const handleGalleryFileChange = (event) => {
+    const file = event.target.files?.[0]
+    setGalleryError(null)
+    if (!file) {
+      setGalleryFile(null)
+      return
+    }
+    if (file.type.startsWith('video/')) {
+      const url = URL.createObjectURL(file)
+      const video = document.createElement('video')
+      video.preload = 'metadata'
+      video.onloadedmetadata = () => {
+        URL.revokeObjectURL(url)
+        if (video.duration > 60) {
+          setGalleryError('Video length must be 1 minute or less.')
+          setGalleryFile(null)
+          event.target.value = ''
+        } else {
+          setGalleryFile(file)
+        }
+      }
+      video.src = url
+      return
+    }
+    setGalleryFile(file)
+  }
+
+  const handleGallerySubmit = async (event) => {
+    event.preventDefault()
+    if (!galleryFile) {
+      setGalleryError('Please select an image or video.')
+      return
+    }
+    setGallerySaving(true)
+    setGalleryError(null)
+    try {
+      const payload = new FormData()
+      payload.append('file', galleryFile)
+      await apiClient.post('/admin/gallery', payload, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      setGalleryOpen(false)
+      setGalleryFile(null)
+    } catch (err) {
+      setGalleryError(err.response?.data?.message || err.message || 'Failed to upload media.')
+    } finally {
+      setGallerySaving(false)
+    }
+  }
+
+  const handleNoticeSubmit = async (event) => {
+    event.preventDefault()
+    setNoticeSaving(true)
+    setNoticeFormError(null)
+    try {
+      if (!noticeForm.title) {
+        setNoticeFormError('Notice title is required.')
+        setNoticeSaving(false)
+        return
+      }
+      const payload = new FormData()
+      payload.append('title', noticeForm.title)
+      payload.append('description', noticeForm.description || '')
+      payload.append('isActive', noticeForm.isActive)
+      if (noticeForm.file) {
+        payload.append('file', noticeForm.file)
+      }
+      if (!noticeForm.id && !noticeForm.file) {
+        setNoticeFormError('Please upload a notice document.')
+        setNoticeSaving(false)
+        return
+      }
+      if (noticeForm.id) {
+        await apiClient.put(`/admin/notices/${noticeForm.id}`, payload, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        })
+      } else {
+        await apiClient.post('/admin/notices', payload, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        })
+      }
+      setNoticeOpen(false)
+      setNoticeForm({
+        id: '',
+        title: '',
+        description: '',
+        isActive: true,
+        file: null,
+        currentFileName: '',
+      })
+      fetchNotices()
+    } catch (err) {
+      setNoticeFormError(err.response?.data?.message || err.message || 'Failed to save notice.')
+    } finally {
+      setNoticeSaving(false)
     }
   }
 
@@ -191,29 +395,61 @@ const AdminEvents = () => {
         <p className="rounded-xl bg-red-50 px-4 py-2 text-sm text-red-700">{error}</p>
       )}
       <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h2 className="text-lg font-semibold text-slate-900">Events</h2>
             <p className="mt-1 text-sm text-slate-500">Create announcements for school-wide visibility.</p>
           </div>
-          <button
-            onClick={() => {
-              setForm({
-                id: '',
-                title: '',
-                description: '',
-                startDate: '',
-                endDate: '',
-                colorTheme: DEFAULT_COLOR,
-                isActive: true,
-              })
-              setFormError(null)
-              setIsOpen(true)
-            }}
-            className="rounded-xl bg-linear-to-r from-blue-600 to-indigo-600 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white shadow-sm transition hover:from-blue-700 hover:to-indigo-700"
-          >
-            Create Event
-          </button>
+          <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+            <button
+              type="button"
+              onClick={() => {
+                setGalleryError(null)
+                setGalleryFile(null)
+                setGalleryOpen(true)
+              }}
+              className="rounded-xl border border-gray-200 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-700 transition hover:bg-gray-50"
+            >
+              Img/Video
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setNoticeForm({
+                  id: '',
+                  title: '',
+                  description: '',
+                  isActive: true,
+                  file: null,
+                  currentFileName: '',
+                })
+                setNoticeFormError(null)
+                setNoticeOpen(true)
+              }}
+              className="rounded-xl border border-blue-200 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-blue-700 transition hover:bg-blue-50"
+            >
+              Create Notice
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setForm({
+                  id: '',
+                  title: '',
+                  description: '',
+                  startDate: '',
+                  endDate: '',
+                  colorTheme: DEFAULT_COLOR,
+                  isActive: true,
+                })
+                setFormError(null)
+                setIsOpen(true)
+              }}
+              className="rounded-xl bg-linear-to-r from-blue-600 to-indigo-600 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white shadow-sm transition hover:from-blue-700 hover:to-indigo-700"
+            >
+              Create Event
+            </button>
+          </div>
         </div>
       </div>
 

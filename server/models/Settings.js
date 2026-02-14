@@ -8,6 +8,7 @@ const settingsSchema = new mongoose.Schema(
     schoolMotto: { type: String, trim: true },
     contactEmail: { type: String, trim: true, lowercase: true },
     contactPhone: { type: String, trim: true },
+    address: { type: String, trim: true },
     timezone: { type: String, trim: true },
     resultPublishMode: { type: String, trim: true },
     updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },

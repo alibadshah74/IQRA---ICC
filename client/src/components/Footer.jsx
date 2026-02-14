@@ -1,17 +1,58 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Facebook, Instagram, Linkedin, Youtube } from 'lucide-react'
 import Modal from './Modal.jsx'
+import apiClient from '../api/client.js'
 
 const Footer = () => {
   const [modal, setModal] = useState('')
+  const [settings, setSettings] = useState({
+    schoolName: '',
+    academicYear: '',
+    schoolMotto: '',
+    contactEmail: '',
+    contactPhone: '',
+    address: '',
+  })
 
   const closeModal = () => setModal('')
 
+  useEffect(() => {
+    let cancelled = false
+    const run = async () => {
+      try {
+        const { data } = await apiClient.get('/settings')
+        const payload = data?.data ?? data
+        if (cancelled) return
+        setSettings({
+          schoolName: payload?.schoolName || '',
+          academicYear: payload?.academicYear || '',
+          schoolMotto: payload?.schoolMotto || '',
+          contactEmail: payload?.contactEmail || '',
+          contactPhone: payload?.contactPhone || '',
+          address: payload?.address || '',
+        })
+      } catch (err) {
+        if (!cancelled) {
+          setSettings({
+            schoolName: '',
+            academicYear: '',
+            schoolMotto: '',
+            contactEmail: '',
+            contactPhone: '',
+            address: '',
+          })
+        }
+      }
+    }
+    run()
+    return () => { cancelled = true }
+  }, [])
+
   return (
-    <footer className="mt-16 border-t border-gray-200 bg-white">
+    <footer className="mt-16 border-t border-gray-200 bg-slate-50">
       <div className="mx-auto max-w-6xl px-6 py-12">
-        <div className="grid gap-10 md:grid-cols-3">
-          <div>
+        <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="order-1 lg:order-1">
             <p className="text-xs uppercase tracking-[0.3em] text-slate-400">IQRA</p>
             <h3 className="mt-3 text-2xl font-semibold text-slate-900">IQRA Coaching Center</h3>
             <p className="mt-3 text-sm text-slate-600">
@@ -53,7 +94,7 @@ const Footer = () => {
             </div>
           </div>
 
-          <div>
+          <div className="order-3 lg:order-2">
             <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Navigate</p>
             <ul className="mt-4 space-y-2 text-sm text-slate-600">
               <li><a href="#about-iqra" className="hover:text-slate-900">About IQRA</a></li>
@@ -64,7 +105,7 @@ const Footer = () => {
             </ul>
           </div>
 
-          <div>
+          <div className="order-2 lg:order-3">
             <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Legal</p>
             <div className="mt-4 flex flex-col gap-3 text-sm text-slate-600">
               <button
@@ -81,6 +122,36 @@ const Footer = () => {
               >
                 Privacy Policy
               </button>
+            </div>
+          </div>
+
+          <div className="order-4 lg:order-4 flex flex-col justify-center">
+            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">School Profile</p>
+            <div className="mt-4 space-y-3 text-sm text-slate-600">
+              <div className="flex items-start justify-between gap-3">
+                <span className="text-slate-500">School Name</span>
+                <span className="font-semibold text-slate-900">{settings.schoolName || '-'}</span>
+              </div>
+              <div className="flex items-start justify-between gap-3">
+                <span className="text-slate-500">Academic Year</span>
+                <span className="font-semibold text-slate-900">{settings.academicYear || '-'}</span>
+              </div>
+              <div className="flex items-start justify-between gap-3">
+                <span className="text-slate-500">School Motto</span>
+                <span className="font-semibold text-slate-900">{settings.schoolMotto || '-'}</span>
+              </div>
+              <div className="flex items-start justify-between gap-3">
+                <span className="text-slate-500">Email</span>
+                <span className="font-semibold text-slate-900">{settings.contactEmail || '-'}</span>
+              </div>
+              <div className="flex items-start justify-between gap-3">
+                <span className="text-slate-500">Contact</span>
+                <span className="font-semibold text-slate-900">{settings.contactPhone || '-'}</span>
+              </div>
+              <div className="flex items-start justify-between gap-3">
+                <span className="text-slate-500">Address</span>
+                <span className="font-semibold text-slate-900">{settings.address || '-'}</span>
+              </div>
             </div>
           </div>
         </div>

@@ -7,6 +7,9 @@ import Result from '../models/Result.js'
 import Payment from '../models/Payment.js'
 import Event from '../models/Event.js'
 import Settings from '../models/Settings.js'
+import GalleryItem from '../models/GalleryItem.js'
+import Notice from '../models/Notice.js'
+import { uploadToImageKit, isImageKitConfigured } from '../config/imagekit.js'
 
 const safeUserFields = 'fullName email username role isActive rollNumber guardianName assignedClasses'
 
@@ -978,6 +981,7 @@ export const updateSettings = async (req, res) => {
       schoolMotto,
       contactEmail,
       contactPhone,
+      address,
       timezone,
       resultPublishMode,
     } = req.body
@@ -991,6 +995,7 @@ export const updateSettings = async (req, res) => {
     if (typeof schoolMotto !== 'undefined') updates.schoolMotto = schoolMotto?.trim()
     if (typeof contactEmail !== 'undefined') updates.contactEmail = contactEmail?.trim().toLowerCase()
     if (typeof contactPhone !== 'undefined') updates.contactPhone = contactPhone?.trim()
+    if (typeof address !== 'undefined') updates.address = address?.trim()
     if (typeof timezone !== 'undefined') updates.timezone = timezone?.trim()
     if (typeof resultPublishMode !== 'undefined') updates.resultPublishMode = resultPublishMode?.trim()
 
@@ -1003,5 +1008,183 @@ export const updateSettings = async (req, res) => {
     return sendSuccess(res, 'Settings saved successfully.', settings)
   } catch (error) {
     return sendError(res, 500, 'Failed to save settings.')
+  }
+}
+
+// Admin-only: upload gallery image/video.
+export const createGalleryItem = async (req, res) => {
+  try {
+    if (!requireAdmin(req, res)) return
+
+    if (!isImageKitConfigured) {
+      return sendError(res, 500, 'File storage is not configured.')
+    }
+
+    if (!req.file) {
+      return sendError(res, 400, 'Image or video file is required.')
+    }
+
+    const mimeType = req.file.mimetype || ''
+    const isImage = mimeType.startsWith('image/')
+    const isVideo = mimeType.startsWith('video/')
+    if (!isImage && !isVideo) {
+      return sendError(res, 400, 'Only image or video files are allowed.')
+    }
+
+    const uploadResult = await uploadToImageKit(req.file.buffer, {
+      folder: '/iqra/gallery',
+      fileName: req.file.originalname,
+      mimeType,
+    })
+
+    const item = await GalleryItem.create({
+      fileUrl: uploadResult.url,
+      fileName: req.file.originalname,
+      fileType: mimeType,
+      fileSize: req.file.size,
+      mediaType: isImage ? 'image' : 'video',
+      uploadedBy: req.user._id,
+      isActive: true,
+    })
+
+    return sendSuccess(res, 'Gallery item uploaded successfully.', item, 201)
+  } catch (error) {
+    return sendError(res, 500, 'Failed to upload gallery item.')
+  }
+}
+
+// Admin-only: list all notices.
+export const fetchNotices = async (req, res) => {
+  try {
+    if (!requireAdmin(req, res)) return
+
+    const { page, limit, skip } = getPagination(req)
+    const { q, isActive } = req.query
+
+    const filter = { ...buildTextSearch(q, ['title', 'description']) }
+    if (typeof isActive !== 'undefined') filter.isActive = isActive === 'true'
+
+    const [total, items] = await Promise.all([
+      Notice.countDocuments(filter),
+      Notice.find(filter)
+        .populate('createdBy', safeUserFields)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+    ])
+
+    return sendSuccess(res, 'Notices fetched successfully.', {
+      items,
+      pagination: { page, limit, total, pages: Math.ceil(total / limit) || 1 },
+    })
+  } catch (error) {
+    return sendError(res, 500, 'Failed to fetch notices.')
+  }
+}
+
+// Admin-only: create a notice with document upload.
+export const createNotice = async (req, res) => {
+  try {
+    if (!requireAdmin(req, res)) return
+
+    if (!isImageKitConfigured) {
+      return sendError(res, 500, 'File storage is not configured.')
+    }
+
+    const { title, description, isActive } = req.body
+    if (!title) {
+      return sendError(res, 400, 'Title is required.')
+    }
+
+    if (!req.file) {
+      return sendError(res, 400, 'Notice document is required.')
+    }
+
+    const uploadResult = await uploadToImageKit(req.file.buffer, {
+      folder: '/iqra/notices',
+      fileName: req.file.originalname,
+      mimeType: req.file.mimetype,
+    })
+
+    const notice = await Notice.create({
+      title: title.trim(),
+      description: description?.trim(),
+      fileUrl: uploadResult.url,
+      fileName: req.file.originalname,
+      fileType: req.file.mimetype,
+      fileSize: req.file.size,
+      isActive: typeof isActive !== 'undefined' ? !!isActive : true,
+      createdBy: req.user._id,
+    })
+
+    return sendSuccess(res, 'Notice created successfully.', notice, 201)
+  } catch (error) {
+    return sendError(res, 500, 'Failed to create notice.')
+  }
+}
+
+// Admin-only: update notice metadata or document.
+export const updateNotice = async (req, res) => {
+  try {
+    if (!requireAdmin(req, res)) return
+
+    const noticeId = req.params.id || req.params.noticeId || req.body.noticeId
+    if (!noticeId) {
+      return sendError(res, 400, 'Notice id is required.')
+    }
+
+    const notice = await Notice.findById(noticeId)
+    if (!notice) {
+      return sendError(res, 404, 'Notice not found.')
+    }
+
+    const { title, description, isActive } = req.body
+
+    if (typeof title !== 'undefined') notice.title = title?.trim()
+    if (typeof description !== 'undefined') notice.description = description?.trim()
+    if (typeof isActive !== 'undefined') notice.isActive = !!isActive
+
+    if (req.file) {
+      if (!isImageKitConfigured) {
+        return sendError(res, 500, 'File storage is not configured.')
+      }
+      const uploadResult = await uploadToImageKit(req.file.buffer, {
+        folder: '/iqra/notices',
+        fileName: req.file.originalname,
+        mimeType: req.file.mimetype,
+      })
+      notice.fileUrl = uploadResult.url
+      notice.fileName = req.file.originalname
+      notice.fileType = req.file.mimetype
+      notice.fileSize = req.file.size
+    }
+
+    await notice.save()
+
+    return sendSuccess(res, 'Notice updated successfully.', notice)
+  } catch (error) {
+    return sendError(res, 500, 'Failed to update notice.')
+  }
+}
+
+// Admin-only: delete notice.
+export const deleteNotice = async (req, res) => {
+  try {
+    if (!requireAdmin(req, res)) return
+
+    const noticeId = req.params.id || req.params.noticeId || req.body.noticeId
+    if (!noticeId) {
+      return sendError(res, 400, 'Notice id is required.')
+    }
+
+    const notice = await Notice.findByIdAndDelete(noticeId)
+    if (!notice) {
+      return sendError(res, 404, 'Notice not found.')
+    }
+
+    return sendSuccess(res, 'Notice deleted successfully.', notice)
+  } catch (error) {
+    return sendError(res, 500, 'Failed to delete notice.')
   }
 }

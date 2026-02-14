@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import { protect, authorize } from '../middlewares/index.js'
+import { upload } from '../middlewares/upload.middleware.js'
 import * as authController from '../controllers/auth.controller.js'
 import * as adminController from '../controllers/admin.controller.js'
 
@@ -40,6 +41,13 @@ adminRoutes.get('/events', adminController.fetchAllEvents)
 adminRoutes.post('/events', adminController.createEvent)
 adminRoutes.put('/events/:id', adminController.updateEvent)
 adminRoutes.patch('/events/:id/disable', adminController.disableEvent)
+
+adminRoutes.post('/gallery', upload.single('file'), adminController.createGalleryItem)
+
+adminRoutes.get('/notices', adminController.fetchNotices)
+adminRoutes.post('/notices', upload.single('file'), adminController.createNotice)
+adminRoutes.put('/notices/:id', upload.single('file'), adminController.updateNotice)
+adminRoutes.delete('/notices/:id', adminController.deleteNotice)
 
 adminRoutes.get('/settings', adminController.getSettings)
 adminRoutes.put('/settings', adminController.updateSettings)
