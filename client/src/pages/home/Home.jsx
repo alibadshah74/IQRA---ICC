@@ -18,7 +18,7 @@ const Home = () => {
           <div>
             <p className="text-xs uppercase tracking-[0.4em] text-slate-500">Welcome to IQRA</p>
             <h1 className="mt-4 text-4xl font-semibold leading-tight text-slate-900 md:text-5xl">
-              Knowledge with purpose and guidance with care.
+              Addmission Open for 2026-2027
             </h1>
             <p className="mt-4 text-base text-slate-500 md:text-lg">
               IQRA Coaching Center builds confident learners through structured lessons, mentorship, and
