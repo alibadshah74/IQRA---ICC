@@ -8,11 +8,17 @@ import User from '../models/User.js'
 const MONGO_URI = process.env.MONGO_URI
 dotenv.config()
 
+// Added validation for env variables
+if (!process.env.ADMIN_USERNAME || !process.env.ADMIN_EMAIL || !process.env.ADMIN_PASSWORD) {
+  console.error('Admin credentials are missing in environment variables.')
+  process.exit(1)
+}
+
 const ADMIN = {
   fullName: 'Md Majid Hussain',
-  username: 'adminmajid',
-  email: 'admin@iqra.edu',
-  password: 'Admin@123',
+  username: process.env.ADMIN_USERNAME.trim(),
+  email: process.env.ADMIN_EMAIL.trim().toLowerCase(),
+  password: process.env.ADMIN_PASSWORD,
   role: 'admin',
   isActive: true,
 }
